@@ -9,8 +9,13 @@ export default function App({ Component, pageProps }: AppProps) {
     domain: process?.env?.NEXT_PUBLIC_PANGEA_DOMAIN || "",
   };
 
+  // Redirect back to path that login was started from on successful login attempt
+  const handleLogin = (appData: AppState) => {
+    router.push(appData.returnPath);
+  }
+  
   return (
-    <AuthProvider loginUrl={hostedLoginURL} redirectPathname="/authenticated" config={authConfig}>
+    <AuthProvider loginUrl={hostedLoginURL} onLogin={handleLogin} config={authConfig}>
       <Component {...pageProps} />
     </AuthProvider>
   );
