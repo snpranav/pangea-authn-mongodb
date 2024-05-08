@@ -1,8 +1,3 @@
-import { PangeaConfig, AuthNService, PangeaErrors, AuthN } from "pangea-node-sdk";
-
-const config = new PangeaConfig({ domain: process.env.PANGEA_DOMAIN });
-const authn = new AuthNService(process.env.PANGEA_TOKEN, config);
-
 const getBearerToken = (req) => {
   const authorizationHeader =
   req.headers instanceof Headers
@@ -22,25 +17,28 @@ const validateToken = async (token) => {
   const result = false;
 
   if (token) {
-    // Check the token against the authn service
+    const SERVICEURL = `https://authn.${process.env.PANGEA_DOMAIN}/v2/client/token/check`;
     try {
-      const response = await authn.client.clientToken.check(token);
-      const authStatus = response.status === "Success";
-      return authStatus;
-      
+      const response = await fetch(SERVICEURL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.PANGEA_TOKEN || ""}`,
+        },
+        body: JSON.stringify({ token: token }),
+      });
+
+      const responseJSON = await response.json();
+
+      return responseJSON.status === "Success";
     } catch (error) {
-      if (error instanceof PangeaErrors.APIError) {
-        console.error("Something went wrong with your Pangea Configuration");
-        console.error(error.toString());
-      } else {
-        console.error(
-          "Error occured during token validation. Looks like environment variables haven't been set correctly, or the service token has expired",
-          error
-          );
-        }
-      }
+      console.error(
+        "Error occured during token validation. Looks like environment variables haven't been set correctly, or the service token has expired",
+        error
+      );
     }
-    return result;
+  }
+  return result;
 };
   
 // Fetch user Info
@@ -50,25 +48,31 @@ export const getUserInfo = async (req) => {
   
   if (token) {
     // Check the token against the authn service
+    const SERVICEURL = `https://authn.${process.env.PANGEA_DOMAIN}/v2/client/token/check`;
     try {
-      const response = await authn.client.clientToken.check(token);
-      const authStatus = response.status === "Success";
+        const response = await fetch(SERVICEURL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${process.env.PANGEA_TOKEN || ""}`,
+            },
+            body: JSON.stringify({ token: token }),
+        });
       
-      const userEmail = authStatus ? response.result.email : "";
-      const userProfile = authStatus ? response.result.profile : "";
+        const responseJSON = await response.json();
+        
+        const authStatus = responseJSON.status === "Success";
+
+        const userEmail = authStatus ? responseJSON.result.email : "";
+        const userProfile = authStatus ? responseJSON.result.profile : "";
       
-      return { userEmail, userProfile };
+        return { userEmail, userProfile };
       
     } catch (error) {
-      if (error instanceof PangeaErrors.APIError) {
-        console.error("Something went wrong with your Pangea Configuration");
-        console.error(error.toString());
-      } else {
         console.error(
           "Error occured during token validation. Looks like environment variables haven't been set correctly, or the service token has expired",
           error
           );
-        }
       }
   }
   return result;

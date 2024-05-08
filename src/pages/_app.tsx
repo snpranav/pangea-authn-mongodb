@@ -1,6 +1,7 @@
 import "@/styles/globals.css";
 import type { AppProps } from "next/app";
-import { AuthProvider } from "@pangeacyber/react-auth";
+import { AppState, AuthProvider } from "@pangeacyber/react-auth";
+import { useRouter } from "next/router";
 
 export default function App({ Component, pageProps }: AppProps) {
   const hostedLoginURL = process?.env?.NEXT_PUBLIC_AUTHN_HOSTED_LOGIN_URL || "";
@@ -10,6 +11,7 @@ export default function App({ Component, pageProps }: AppProps) {
   };
 
   // Redirect back to path that login was started from on successful login attempt
+  const router = useRouter();
   const handleLogin = (appData: AppState) => {
     router.push(appData.returnPath);
   }
